@@ -17,7 +17,7 @@ port : process.env.DB_PORT || 3306
 
 db.connect((err)=>{
 if (err){
-console.log("Error en la conexion a la base de datos")
+console.log("DB ERROR COMPLETO:", err)
 return 
 }
 console.log("Conectado a la base de datos")
