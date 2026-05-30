@@ -1,4 +1,4 @@
-const mysql = require ("mysql");
+const mysql2 = require ("mysql");
 const cors = require ("cors");
 const express = require ("express");
 const bodyParser = require ("body-parser");
