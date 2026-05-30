@@ -6,7 +6,6 @@ const factura = require ("../Routes/factura.router")
 const path = require ("path")
 const swaggerUi = require("swagger-ui-express");
 const swaggerSpec = require("../service/swagger");
-
 const PORT = process.env.PORT ||3014
 const app = express();
 const dir = path.join(__dirname, "uploads")
