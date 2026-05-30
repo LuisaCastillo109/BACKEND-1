@@ -4,41 +4,69 @@ const db = require ("../Conexion/conexion")
 const jwt = require ("jsonwebtoken");
 const transporter = require ("../service/configuracion")
 
-exports.CrearUsuario =(req,res)=>{
-const {nombre,apellido,correo,contrasena,rol}=req.body;
-if (!nombre || !apellido || !correo || !contrasena){
-return res.status(400).json("Todos los datos deben de estar llenos")
-}
-if (contrasena.length <6){
-return res.status(400).json("La contraseña debe de tener mas de 6 caracteres")
-}
-db.query("SELECT * FROM usuarios WHERE correo=?",
-[correo],
-async(err,result)=>{
-if (err){
-console.log(err)
-return res.status(400).json("Error en el servidor")
-}
-if (result.length >0){
-return res.status(400).json("El correo ya existe en el sistema")
-}
-try{
-const hashedPassword = await bcrypt.hash(contrasena,10)
-const Rol = rol || 2
-const estado = "activo"
-db.query("INSERT INTO usuarios (nombre,apellido,correo,contrasena,rol,estado)VALUES(?,?,?,?,?,?)",
-[nombre,apellido,correo,hashedPassword,Rol,estado],
-(err,result)=>{
-if (err){
-console.log(err)
-return res.status(400).json("Usuario no registrado")
-}
-res.send(result)
-})}
-catch(err){
-console.log("Usuario no registrado")
-}})};
+exports.CrearUsuario = (req, res) => {
+  console.log("📩 BODY COMPLETO:", req.body);
 
+  const { nombre, apellido, correo, contrasena, rol } = req.body;
+
+  console.log("🔎 CAMPOS RECIBIDOS:");
+  console.log("nombre:", nombre);
+  console.log("apellido:", apellido);
+  console.log("correo:", correo);
+  console.log("contrasena:", contrasena);
+  console.log("rol:", rol);
+
+  if (!nombre || !apellido || !correo || !contrasena) {
+    console.log("❌ FALTAN DATOS");
+    return res.status(400).json("Todos los datos deben de estar llenos");
+  }
+
+  console.log("✅ TODOS LOS DATOS LLEGARON");
+
+  if (contrasena.length < 6) {
+    console.log("❌ PASSWORD MUY CORTA");
+    return res.status(400).json("La contraseña debe de tener mas de 6 caracteres");
+  }
+
+  db.query(
+    "SELECT * FROM usuarios WHERE correo=?",
+    [correo],
+    async (err, result) => {
+      if (err) {
+        console.log("❌ ERROR SQL:", err);
+        return res.status(400).json("Error en el servidor");
+      }
+
+      if (result.length > 0) {
+        console.log("❌ CORREO YA EXISTE");
+        return res.status(400).json("El correo ya existe en el sistema");
+      }
+
+      try {
+        const hashedPassword = await bcrypt.hash(contrasena, 10);
+        const Rol = rol || 2;
+        const estado = "activo";
+
+        db.query(
+          "INSERT INTO usuarios (nombre,apellido,correo,contrasena,rol,estado) VALUES (?,?,?,?,?,?)",
+          [nombre, apellido, correo, hashedPassword, Rol, estado],
+          (err, result) => {
+            if (err) {
+              console.log("❌ ERROR INSERT:", err);
+              return res.status(400).json("Usuario no registrado");
+            }
+
+            console.log("✅ USUARIO CREADO CORRECTAMENTE");
+            return res.send(result);
+          }
+        );
+      } catch (err) {
+        console.log("❌ ERROR HASH:", err);
+        return res.status(500).json("Error interno");
+      }
+    }
+  );
+};
 
 exports.CrearCliente =(req,res)=>{
 const {nombre,apellido,direccion,telefono,documento,email,tipo_documento,pdf,usuario_id}=req.body;
