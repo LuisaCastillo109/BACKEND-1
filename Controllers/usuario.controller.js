@@ -5,11 +5,11 @@ const jwt = require ("jsonwebtoken");
 const transporter = require ("../service/configuracion")
 
 exports.CrearUsuario =(req,res)=>{
-const {nombre,apellido,correo,contraseña,rol}=req.body;
-if (!nombre || !apellido || !correo || !contraseña){
+const {nombre,apellido,correo,contrasena,rol}=req.body;
+if (!nombre || !apellido || !correo || !contrasena){
 return res.status(400).json("Todos los datos deben de estar llenos")
 }
-if (contraseña.length <6){
+if (contrasena.length <6){
 return res.status(400).json("La contraseña debe de tener mas de 6 caracteres")
 }
 db.query("SELECT * FROM usuarios WHERE correo=?",
@@ -23,10 +23,10 @@ if (result.length >0){
 return res.status(400).json("El correo ya existe en el sistema")
 }
 try{
-const hashedPassword = await bcrypt.hash(contraseña,10)
+const hashedPassword = await bcrypt.hash(contrasena,10)
 const Rol = rol || 2
 const estado = "activo"
-db.query("INSERT INTO usuarios (nombre,apellido,correo,contraseña,rol,estado)VALUES(?,?,?,?,?,?)",
+db.query("INSERT INTO usuarios (nombre,apellido,correo,contrasena,rol,estado)VALUES(?,?,?,?,?,?)",
 [nombre,apellido,correo,hashedPassword,Rol,estado],
 (err,result)=>{
 if (err){
@@ -57,8 +57,8 @@ res.send(result)
 
 
 exports.LoginUsuario =(req,res)=>{
-const {correo,contraseña}=req.body;
-if (!correo || !contraseña){
+const {correo,contrasena}=req.body;
+if (!correo || !contrasena){
 return res.status(400).json("Los datos deben de estar completos")
 }
 db.query("SELECT * FROM usuarios WHERE correo=?",
@@ -76,8 +76,8 @@ if (usuario.estado==="inactivo"){
 return res.status(400).json("Usuario inactivo, contacte al administrador")
 }
 const ConfirmarContraseña = await bcrypt.compare(
-contraseña,
-usuario.contraseña
+contrasena,
+usuario.contrasena
 )
 if (!ConfirmarContraseña){
 return res.status(400).json("Contraseña incorrecta")
@@ -144,11 +144,11 @@ res.status(200).json("Correo enviado exitosamente")
 
 
 exports.ReestablecerPassword =(req,res)=>{
-const {contraseña,Token}=req.body;
-if (!contraseña){
+const {contrasena,Token}=req.body;
+if (!contrasena){
 return res.status(400).json("El campo es obligatorio")
 }
-if (contraseña.length <6){
+if (contrasena.length <6){
 return res.status(400).json("La contraseña debe de tener minimo 6 caracteres")
 }
 db.query("SELECT * FROM usuarios WHERE reset_token=? AND reset_expira >NOW()",
@@ -162,8 +162,8 @@ if (result.length ===0){
 return res.status(400).json("Error al ingresar al token")
 }
 try{
-const hashedPassword = await bcrypt.hash(contraseña,10)
-db.query("UPDATE usuarios SET contraseña=?, reset_token = NULL, reset_expira=NULL WHERE id=?",
+const hashedPassword = await bcrypt.hash(contrasena,10)
+db.query("UPDATE usuarios SET contrasena=?, reset_token = NULL, reset_expira=NULL WHERE id=?",
 [hashedPassword,result[0].id],
 async(err,result)=>{
 if (err){
@@ -213,11 +213,11 @@ res.send(result)
 
 
 exports.ActualizarUsuarios =async(req,res)=>{
-const {nombre,apellido,correo,contraseña,estado}=req.body;
+const {nombre,apellido,correo,contrasena,estado}=req.body;
 const {id}=req.params;
 try{
-const hashedPassword = await bcrypt.hash(contraseña,10)
-db.query("UPDATE usuarios SET nombre=?,apellido=?,correo=?,contraseña=?,estado=? WHERE id=?",
+const hashedPassword = await bcrypt.hash(contrasena,10)
+db.query("UPDATE usuarios SET nombre=?,apellido=?,correo=?,contrasena=?,estado=? WHERE id=?",
 [nombre,apellido,correo,hashedPassword,estado,id],
 (err,result)=>{
 if (err){
