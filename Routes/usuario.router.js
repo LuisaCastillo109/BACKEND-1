@@ -6,7 +6,8 @@ const router = express.Router()
 const multer = require ("multer")
 const path = require ("path")
 
-const app = (express.json());
+const app = express;
+app.use (express().json());
 app.use (cors());
 
 
