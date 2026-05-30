@@ -1,11 +1,10 @@
 const mysql= require ("mysql2");
 const cors = require ("cors");
 const express = require ("express");
-const bodyParser = require ("body-parser");
 
-const app = express();
+const app = (express.json());
 app.use (cors());
-app.use (bodyParser.json());
+
 
 const db = mysql.createConnection({
 host : process.env.DB_HOST,

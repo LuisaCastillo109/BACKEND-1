@@ -1,6 +1,5 @@
 const cors = require ("cors");
 const express = require ("express");
-const bodyParser = require ("body-parser");
 const router = require ("../Routes/usuario.router");
 const factura = require ("../Routes/factura.router")
 const path = require ("path")
@@ -11,7 +10,6 @@ const app = express();
 const dir = path.join(__dirname, "uploads")
 
 app.use (cors());
-app.use (bodyParser.json());
 app.use ("/",router);
 app.use ("/",factura)
 app.use ("/uploads", express.static(dir))

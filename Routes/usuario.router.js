@@ -1,15 +1,13 @@
 const cors = require ("cors");
 const express = require ("express");
-const bodyParser = require ("body-parser");
 const UsuarioControllers = require ("../Controllers/usuario.controller")
 const {VerificarToken,TokenRol} = require ("../service/jwt")
 const router = express.Router()
 const multer = require ("multer")
 const path = require ("path")
 
-const app = express();
+const app = (express.json());
 app.use (cors());
-app.use (bodyParser.json());
 
 
 const imagenes = multer.diskStorage({
