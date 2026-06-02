@@ -230,7 +230,7 @@ res.send(result)
 
 
 exports.ObtenerClientes =(req,res)=>{
-db.query("SELECT id,nombre,apellido,email,pdf,direccion,genero,telefono,documento,usuario_id FROM clientes",
+db.query("SELECT id,nombre,apellido,email,pdf,direccion,genero,telefono,documento,usuario_id FROM clientes WHERE usuario_id =?",
 (err,result)=>{
 if (err){
 console.log(err)
