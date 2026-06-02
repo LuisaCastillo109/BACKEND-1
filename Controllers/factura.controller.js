@@ -167,9 +167,6 @@ return res.status(400).json("Erro al obtener el detalle de facturas")
 res.send(result)
 })};
 
-/* =========================
-   PAGAR FACTURA
-========================= */
 exports.PagarFactura = (req, res) => {
   const { id } = req.params;
 
@@ -186,9 +183,6 @@ exports.PagarFactura = (req, res) => {
   );
 };
 
-/* =========================
-   ELIMINAR FACTURA
-========================= */
 exports.EliminarFactura = (req, res) => {
   const { id } = req.params;
 
