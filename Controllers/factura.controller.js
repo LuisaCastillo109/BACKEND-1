@@ -306,7 +306,11 @@ return res.status(400).json("Error al obtener clientes")
 res.send(result)
 })};
 
+
 exports.ObtenerClientesConFacturas = (req, res) => {
+
+  const { usuario_id } = req.params;
+
   const sql = `
     SELECT 
       c.id AS id_cliente,
@@ -326,19 +330,24 @@ exports.ObtenerClientesConFacturas = (req, res) => {
       f.estado,
       f.fecha,
       f.pdf
-
     FROM clientes c
-    INNER JOIN facturas f ON c.id = f.id_cliente
+    INNER JOIN facturas f 
+      ON c.id = f.id_cliente
+    WHERE c.usuario_id = ?
     ORDER BY c.id ASC, f.fecha DESC
   `;
 
-  db.query(sql, (err, result) => {
+  db.query(sql, [usuario_id], (err, result) => {
+
     if (err) {
       console.log(err);
       return res.status(500).json("Error al obtener los clientes con facturas");
     }
+
     res.json(result);
+
   });
+
 };
 
 
