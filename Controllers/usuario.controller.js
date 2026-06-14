@@ -121,6 +121,8 @@ res.status(200).json({
 mensaje : "Ingreso Exitoso",
 Token,
 usuario :{
+
+usuario_id : usuario.usuario_id,
 id : usuario.id,
 nombre : usuario.nombre,
 apellido : usuario.apellido,
