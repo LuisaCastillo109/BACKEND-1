@@ -45,7 +45,7 @@ factura.post("/EnviarFacturaFisica/:id",FacturaController.EnviarFacturaFisica);
 factura.post("/CrearProducto", upload.single("imagen"),FacturaController.CrearProducto);
 factura.get("/ObtenerFacturas/:id",FacturaController.ObtenerFacturas);
 factura.get("/ConsultarFactura/:id",FacturaController.ConsultarFactura);
-factura.get("/ObtenerClientesConFacturas",FacturaController.ObtenerClientesConFacturas);
+factura.get("/ObtenerClientesConFacturas/:usuario_id",FacturaController.ObtenerClientesConFacturas);
 factura.get("/ObtenerFacturaCompleta/:id",FacturaController.ObtenerFacturaCompleta);
 factura.get("/ObtenerClientes/:id",FacturaController.ObtenerClientes);
 factura.get("/VentasMensuales/:id",FacturaController.VentasMensuales);
