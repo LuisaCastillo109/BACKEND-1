@@ -3,6 +3,7 @@ const crypto = require ("crypto");
 const db = require ("../Conexion/conexion")
 const jwt = require ("jsonwebtoken");
 const transporter = require ("../configuracion/configuracion")
+const { put } = require("@vercel/blob");
 
 exports.CrearUsuario = (req, res) => {
   console.log("📩 BODY COMPLETO:", req.body);
@@ -274,18 +275,59 @@ res.send(result)
 })};
 
 
-exports.SubirFoto =(req,res)=>{
-const {id}=req.params;
-const foto = req.file.filename;
-db.query("UPDATE usuarios SET foto =? WHERE id=?",
-[foto,id],
-(err,result)=>{
-if (err){
-console.log(err)
-return res.status(400).json("Error al subir la foto")
-}
-res.send(result)
-})};
+exports.SubirFoto = async (req, res) => {
+
+    const { id } = req.params;
+
+    try {
+        if (!req.file) {
+            return res.status(400).json("No se recibió ninguna imagen");
+        }
+        const nombreArchivo = `usuarios/${id}-${Date.now()}-${req.file.originalname}`;
+        const blob = await put(
+            nombreArchivo,
+            req.file.buffer,
+            {
+                access: "public",
+                contentType: req.file.mimetype
+            }
+        );
+
+        console.log("✅ FOTO SUBIDA A VERCEL BLOB:");
+        console.log(blob.url);
+
+        db.query(
+            "UPDATE usuarios SET foto=? WHERE id=?",
+            [blob.url, id],
+            (err, result) => {
+
+                if (err) {
+                    console.log("❌ ERROR MYSQL:", err);
+
+                    return res.status(400).json(
+                        "La foto se subió pero no se pudo guardar en la base de datos"
+                    );
+                }
+
+                console.log("✅ URL GUARDADA EN MYSQL");
+
+                return res.status(200).json({
+                    mensaje: "Foto subida correctamente",
+                    foto: blob.url
+                });
+            }
+        );
+
+    } catch (err) {
+
+        console.log("❌ ERROR AL SUBIR FOTO:", err);
+
+        return res.status(500).json({
+            mensaje: "Error al subir la foto",
+            error: err.message
+        });
+    }
+};
 
 
 exports.CambiarEstado = (req,res)=>{

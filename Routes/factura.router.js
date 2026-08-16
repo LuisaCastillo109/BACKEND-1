@@ -10,33 +10,56 @@ const app = express();
 app.use (cors());
 app.use (bodyParser.json());
 
-const storageConfig = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, path.join(__dirname, "..", "service", "uploads")); 
-  },
-  filename: (req, file, cb) => {
-    cb(null, Date.now() + path.extname(file.originalname));
-  }
-});
-const upload = multer({ storage: storageConfig });
+const upload = multer({
+    storage: multer.memoryStorage(),
 
-const SubirPDF = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, path.join(__dirname, "..", "service", "pdf"));
-  },
-  filename : (req,file,cb)=>{
-  cb (null, Date.now()+path.extname(file.originalname))
-  }});
+    limits: {
+        fileSize: 5 * 1024 * 1024 // 5 MB máximo
+    },
+
+    fileFilter: (req, file, cb) => {
+
+        const tiposPermitidos = [
+            "image/jpeg",
+            "image/jpg",
+            "image/png",
+            "image/webp"
+        ];
+
+        if (tiposPermitidos.includes(file.mimetype)) {
+            cb(null, true);
+        } else {
+            cb(
+                new Error("Solo se permiten imágenes JPG, JPEG, PNG o WEBP"),
+                false
+            );
+        }
+    }
+});
+
+
+// =====================================================
+// MULTER PARA PDF
+// =====================================================
 
 const PDF = multer({
-  storage: SubirPDF,
-  fileFilter: (req, file, cb) => {
-    if (file.mimetype === "application/pdf") {
-      cb(null, true);
-    } else {
-      cb(new Error("Solo se permiten pdf"), false);
+    storage: multer.memoryStorage(),
+
+    limits: {
+        fileSize: 10 * 1024 * 1024 // 10 MB máximo
+    },
+
+    fileFilter: (req, file, cb) => {
+
+        if (file.mimetype === "application/pdf") {
+            cb(null, true);
+        } else {
+            cb(
+                new Error("Solo se permiten archivos PDF"),
+                false
+            );
+        }
     }
-  }
 });
 
 

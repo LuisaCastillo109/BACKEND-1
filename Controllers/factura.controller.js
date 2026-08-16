@@ -3,6 +3,7 @@ const transporter = require ("../configuracion/configuracion")
 const path = require ("path")
 const fs =  require('fs');
 const PDFDocument = require('pdfkit'); 
+const { put } = require("@vercel/blob");
 
 exports.CrearFactura = (req, res) => {
   const {
@@ -234,42 +235,205 @@ exports.ObtenerDashboard = (req, res) => {
   });
 };
 
-exports.CrearProducto = (req, res) => {
-  const { nombre,precio,stock,descripcion,estado,usuario_id}=req.body;
-  const imagen = req.file ? req.file.filename : null;
+exports.CrearProducto = async (req, res) => {
 
-  db.query(
-    "INSERT INTO productos (nombre, precio, stock, imagen, descripcion, estado, usuario_id) VALUES (?,?,?,?,?,?,?)",
-    [nombre, precio, stock, imagen,descripcion,estado,usuario_id],
-    (err) => {
-      if (err) {
-        console.log(err);
-        return res.status(400).json("Error al crear producto");
-      }
-      res.json("Producto creado");
+    const {
+        nombre,
+        precio,
+        stock,
+        descripcion,
+        estado,
+        usuario_id
+    } = req.body;
+
+    try {
+
+        let imagen = null;
+
+        // ============================================
+        // SUBIR IMAGEN SI EL USUARIO ENVIÓ UNA
+        // ============================================
+
+        if (req.file) {
+
+            const nombreArchivo = `productos/${Date.now()}-${req.file.originalname}`;
+
+            const blob = await put(
+                nombreArchivo,
+                req.file.buffer,
+                {
+                    access: "public",
+                    contentType: req.file.mimetype
+                }
+            );
+
+            imagen = blob.url;
+
+            console.log("✅ IMAGEN DEL PRODUCTO SUBIDA:");
+            console.log(imagen);
+        }
+
+        // ============================================
+        // CREAR PRODUCTO
+        // ============================================
+
+        db.query(
+            `INSERT INTO productos 
+            (nombre, precio, stock, imagen, descripcion, estado, usuario_id) 
+            VALUES (?,?,?,?,?,?,?)`,
+
+            [
+                nombre,
+                precio,
+                stock,
+                imagen,
+                descripcion,
+                estado,
+                usuario_id
+            ],
+
+            (err, result) => {
+
+                if (err) {
+
+                    console.log("❌ ERROR MYSQL:", err);
+
+                    return res.status(400).json(
+                        "Error al crear producto"
+                    );
+                }
+
+                console.log("✅ PRODUCTO CREADO");
+
+                return res.status(200).json({
+                    mensaje: "Producto creado correctamente",
+                    imagen: imagen
+                });
+            }
+        );
+
+    } catch (err) {
+
+        console.log("❌ ERROR AL CREAR PRODUCTO:", err);
+
+        return res.status(500).json({
+            mensaje: "Error al subir la imagen o crear el producto",
+            error: err.message
+        });
     }
-  );
 };
 
-exports.ActualizarProducto = (req, res) => {
-  const { id } = req.params;
-  const { nombre, precio, stock, descripcion, estado } = req.body;
-  let sql = "UPDATE productos SET nombre=?, precio=?, stock=?, descripcion=?, estado=? WHERE id=?";
-  let params = [nombre, precio, stock, descripcion, estado, id];
+exports.ActualizarProducto = async (req, res) => {
 
-  if (req.file) {
-    sql = "UPDATE productos SET nombre=?, precio=?, stock=?, descripcion=?, estado=?, imagen=? WHERE id=?";
-    params = [nombre, precio, stock, descripcion, estado, req.file.filename, id];
-  }
+    const { id } = req.params;
 
-  db.query(sql, params, (err) => {
-    if (err) {
-      console.log(err);
-      return res.status(400).json("Error al actualizar");
+    const {
+        nombre,
+        precio,
+        stock,
+        descripcion,
+        estado
+    } = req.body;
+
+    try {
+
+        let sql = `
+            UPDATE productos 
+            SET nombre=?, 
+                precio=?, 
+                stock=?, 
+                descripcion=?, 
+                estado=?
+            WHERE id=?
+        `;
+
+        let params = [
+            nombre,
+            precio,
+            stock,
+            descripcion,
+            estado,
+            id
+        ];
+
+
+        // ============================================
+        // SI SE ENVÍA UNA NUEVA IMAGEN
+        // ============================================
+
+        if (req.file) {
+
+            const nombreArchivo = `productos/${id}-${Date.now()}-${req.file.originalname}`;
+
+            const blob = await put(
+                nombreArchivo,
+                req.file.buffer,
+                {
+                    access: "public",
+                    contentType: req.file.mimetype
+                }
+            );
+
+            console.log("✅ NUEVA IMAGEN SUBIDA:");
+            console.log(blob.url);
+
+
+            sql = `
+                UPDATE productos 
+                SET nombre=?, 
+                    precio=?, 
+                    stock=?, 
+                    descripcion=?, 
+                    estado=?, 
+                    imagen=?
+                WHERE id=?
+            `;
+
+            params = [
+                nombre,
+                precio,
+                stock,
+                descripcion,
+                estado,
+                blob.url,
+                id
+            ];
+        }
+
+
+        // ============================================
+        // ACTUALIZAR PRODUCTO
+        // ============================================
+
+        db.query(sql, params, (err, result) => {
+
+            if (err) {
+
+                console.log("❌ ERROR MYSQL:", err);
+
+                return res.status(400).json(
+                    "Error al actualizar el producto"
+                );
+            }
+
+            console.log("✅ PRODUCTO ACTUALIZADO");
+
+            return res.status(200).json({
+                mensaje: "Producto actualizado correctamente"
+            });
+        });
+
+    } catch (err) {
+
+        console.log("❌ ERROR AL ACTUALIZAR PRODUCTO:", err);
+
+        return res.status(500).json({
+            mensaje: "Error al actualizar el producto",
+            error: err.message
+        });
     }
-    res.json("Producto actualizado correctamente");
-  });
 };
+
 
 exports.EliminarProducto = (req, res) => {
   const { id } = req.params;
@@ -280,18 +444,59 @@ exports.EliminarProducto = (req, res) => {
   });
 };
 
-exports.subirFotoProducto=(req,res)=>{
-const {id}= req.params;
-const iamgen= req.file.filename;
-db.query("UPDATE facturas SET iamgen=? WHERE id=?",
-[iamgen,id],
-(err,result)=>{
-if (err){
-console.log(err)
-return res.status(400).json("Error al subir la foto")
-}
-res.send(result)
-})};
+exports.subirFotoProducto = async (req, res) => {
+
+    const { id } = req.params;
+
+    try {
+        if (!req.file) {
+            return res.status(400).json("No se recibió ninguna imagen");
+        }
+        const nombreArchivo = `productos/${id}-${Date.now()}-${req.file.originalname}`;
+        const blob = await put(
+            nombreArchivo,
+            req.file.buffer,
+            {
+                access: "public",
+                contentType: req.file.mimetype
+            }
+        );
+
+        console.log("✅ IMAGEN DEL PRODUCTO SUBIDA:");
+        console.log(blob.url);
+
+        db.query(
+            "UPDATE facturas SET imagen=? WHERE id=?",
+            [blob.url, id],
+            (err, result) => {
+
+                if (err) {
+                    console.log("❌ ERROR MYSQL:", err);
+
+                    return res.status(400).json(
+                        "La imagen se subió pero no se pudo guardar en la base de datos"
+                    );
+                }
+
+                console.log("✅ URL DE LA IMAGEN GUARDADA");
+
+                return res.status(200).json({
+                    mensaje: "Imagen subida correctamente",
+                    imagen: blob.url
+                });
+            }
+        );
+
+    } catch (err) {
+
+        console.log("❌ ERROR AL SUBIR IMAGEN:", err);
+
+        return res.status(500).json({
+            mensaje: "Error al subir la imagen",
+            error: err.message
+        });
+    }
+};
 
 exports.ObtenerClientes =(req,res)=>{
 const {id}=req.params;
@@ -416,18 +621,66 @@ exports.VentasPorProducto = (req, res) => {
   });
 };
 
-exports.SubirPDF = (req,res)=>{
-const {id}=req.params;
-const pdf = req.file.filename;
-db.query("UPDATE facturas SET pdf =? WHERE id=?",
-[pdf,id],
-(err,result)=>{
-if (err){
-console.log(err)
-return res.status(400).json("Error al generar el pdf")
-}
-res.send(result)
-})}
+exports.SubirPDF = async (req, res) => {
+
+    const { id } = req.params;
+
+    try {
+
+        // Verificar que llegó el PDF
+        if (!req.file) {
+            return res.status(400).json("No se recibió ningún PDF");
+        }
+
+        // Nombre único del archivo
+        const nombreArchivo = `facturas/${id}-${Date.now()}.pdf`;
+
+        // Subir PDF a Vercel Blob
+        const blob = await put(
+            nombreArchivo,
+            req.file.buffer,
+            {
+                access: "public",
+                contentType: "application/pdf"
+            }
+        );
+
+        console.log("✅ PDF SUBIDO A VERCEL BLOB:");
+        console.log(blob.url);
+
+        // Guardar URL en MySQL
+        db.query(
+            "UPDATE facturas SET pdf=? WHERE id=?",
+            [blob.url, id],
+            (err, result) => {
+
+                if (err) {
+                    console.log("❌ ERROR MYSQL:", err);
+
+                    return res.status(400).json(
+                        "El PDF se subió pero no se pudo guardar en la base de datos"
+                    );
+                }
+
+                console.log("✅ URL DEL PDF GUARDADA EN MYSQL");
+
+                return res.status(200).json({
+                    mensaje: "PDF subido correctamente",
+                    pdf: blob.url
+                });
+            }
+        );
+
+    } catch (err) {
+
+        console.log("❌ ERROR AL SUBIR PDF:", err);
+
+        return res.status(500).json({
+            mensaje: "Error al subir el PDF",
+            error: err.message
+        });
+    }
+};
 
 exports.EnviarFacturaFisica = (req, res) => {
 const { id } = req.params;
