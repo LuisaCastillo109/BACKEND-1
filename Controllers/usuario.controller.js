@@ -2,7 +2,7 @@ const bcrypt = require ("bcrypt");
 const crypto = require ("crypto");
 const db = require ("../Conexion/conexion")
 const jwt = require ("jsonwebtoken");
-const transporter = require ("../service/configuracion")
+const transporter = require ("../configuracion/configuracion")
 
 exports.CrearUsuario = (req, res) => {
   console.log("📩 BODY COMPLETO:", req.body);

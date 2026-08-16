@@ -1,7 +1,7 @@
 const cors = require ("cors");
 const express = require ("express");
 const UsuarioControllers = require ("../Controllers/usuario.controller")
-const {VerificarToken,TokenRol} = require ("../service/jwt")
+const {VerificarToken,TokenRol} = require ("../Jwt/jwt")
 const router = express.Router()
 const multer = require ("multer")
 const path = require ("path")
