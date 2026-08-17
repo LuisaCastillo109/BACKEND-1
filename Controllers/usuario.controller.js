@@ -1,3 +1,4 @@
+require("dotenv").config();
 const bcrypt = require ("bcrypt");
 const crypto = require ("crypto");
 const db = require ("../Conexion/conexion")

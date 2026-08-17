@@ -1,3 +1,4 @@
+require("dotenv").config();
 const db = require("../Conexion/conexion");
 const transporter = require ("../configuracion/configuracion")
 const path = require ("path")
