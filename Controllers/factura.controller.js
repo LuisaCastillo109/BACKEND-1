@@ -3,7 +3,7 @@ const transporter = require ("../configuracion/configuracion")
 const path = require ("path")
 const fs =  require('fs');
 const PDFDocument = require('pdfkit'); 
-const { put } = require("@vercel/blob");
+const { put, list } = require("@vercel/blob");
 
 exports.CrearFactura = (req, res) => {
   const {

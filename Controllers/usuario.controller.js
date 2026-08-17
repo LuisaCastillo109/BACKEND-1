@@ -3,7 +3,7 @@ const crypto = require ("crypto");
 const db = require ("../Conexion/conexion")
 const jwt = require ("jsonwebtoken");
 const transporter = require ("../configuracion/configuracion")
-const { put } = require("@vercel/blob");
+const { put, list } = require("@vercel/blob");
 
 exports.CrearUsuario = (req, res) => {
   console.log("📩 BODY COMPLETO:", req.body);
