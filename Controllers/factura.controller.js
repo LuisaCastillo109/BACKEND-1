@@ -236,7 +236,10 @@ exports.ObtenerDashboard = (req, res) => {
 };
 
 exports.CrearProducto = async (req, res) => {
-
+    console.log(
+        "🔐 BLOB TOKEN EXISTE:",
+        !!process.env.BLOB_READ_WRITE_TOKEN
+    );
     const {
         nombre,
         precio,
