@@ -236,12 +236,16 @@ exports.ObtenerDashboard = (req, res) => {
 };
 
 exports.CrearProducto = async (req, res) => {
-  console.log("🔥🔥🔥 ENTRE A CREAR PRODUCTO 🔥🔥🔥");
+  console.log("🔥🔥🔥 CREAR PRODUCTO FUE LLAMADO 🔥🔥🔥");
 
     console.log(
-        "BLOB TOKEN:",
+        "🔐 BLOB TOKEN EXISTE:",
         !!process.env.BLOB_READ_WRITE_TOKEN
     );
+
+    console.log("📦 FILE:", req.file ? "SÍ LLEGÓ" : "NO LLEGÓ");
+
+    console.log("📩 BODY:", req.body);
     const {
         nombre,
         precio,
