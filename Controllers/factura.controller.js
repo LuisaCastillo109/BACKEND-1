@@ -236,19 +236,12 @@ exports.ObtenerDashboard = (req, res) => {
 };
 
 exports.CrearProducto = async (req, res) => {
-  console.log(
-        "🔐 BLOB TOKEN EXISTE:",
+  console.log("🔥🔥🔥 ENTRE A CREAR PRODUCTO 🔥🔥🔥");
+
+    console.log(
+        "BLOB TOKEN:",
         !!process.env.BLOB_READ_WRITE_TOKEN
     );
-        const pruebaBlob = await list({
-            limit: 1
-        });
-
-        console.log("✅ BLOB AUTORIZADO");
-        console.log(
-            "📦 BLOBS ENCONTRADOS:",
-            pruebaBlob.blobs.length
-        );
     const {
         nombre,
         precio,

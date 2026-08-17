@@ -7,7 +7,6 @@ const { put, list } = require("@vercel/blob");
 
 exports.CrearUsuario = (req, res) => {
   console.log("📩 BODY COMPLETO:", req.body);
-
   const { nombre, apellido, correo, contraseña, rol } = req.body;
 
   console.log("🔎 CAMPOS RECIBIDOS:");
