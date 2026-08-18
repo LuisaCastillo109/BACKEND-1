@@ -135,44 +135,96 @@ foto : usuario.foto
 }})})};
 
 
-exports.RecuperarPassword = (req,res)=>{
-const {correo}=req.body;
-if (!correo){
-return res.status(400).json("El campo es obligatorio")
-}
-db.query("SELECT * FROM usuarios WHERE correo=?",
-[correo],
-async(err,result)=>{
-if (err){
-console.log(err)
-return res.status(400).json("Error en el servidor")
-}
-if (result.length ===0){
-return res.status(400).json("El correo no existe en el sistema")
-}
-const Token = crypto.randomBytes(20).toString("hex")
-const expiracion = new Date (Date.now()+15*60*1000)
-db.query("UPDATE usuarios SET reset_token=?, reset_expira=? WHERE correo=?",
-[Token,expiracion,correo],
-async(err,result)=>{
-if (err)
-return res.status(400).json("Error al generar el token")
-const Link = `http://localhost:3000/ReestablecerPassword/${Token}`
-await transporter.sendMail({
-from :"Soporte <dkim44243@gmail.com>",
-to : correo,
-subject : "Reestablecer Contraseña",
-html : `<h2>Reestablecer Contraseña</h2>
-<p>Haz  click en este enlace para reestablecer su contraseña</p>
-<a href = "${Link}">${Link}</a>
-<p>El enlace vence en 15 minutos</p>`
-})
-if (err){
-return res.status(400).json("Error al enviar el correo electronico")
-}
-res.status(200).json("Correo enviado exitosamente")
-})})};
+exports.RecuperarPassword = (req, res) => {
 
+    const { correo } = req.body;
+
+    if (!correo) {
+        return res.status(400).json("El campo es obligatorio");
+    }
+
+    db.query(
+        "SELECT * FROM usuarios WHERE correo=?",
+        [correo],
+        async (err, result) => {
+
+            if (err) {
+                console.log("ERROR BUSCANDO CORREO:", err);
+                return res.status(500).json("Error en el servidor");
+            }
+
+            if (result.length === 0) {
+                return res.status(400).json("El correo no existe en el sistema");
+            }
+
+            const Token = crypto.randomBytes(20).toString("hex");
+
+            const expiracion = new Date(
+                Date.now() + 15 * 60 * 1000
+            );
+
+            db.query(
+                "UPDATE usuarios SET reset_token=?, reset_expira=? WHERE correo=?",
+                [Token, expiracion, correo],
+                async (err, result) => {
+
+                    if (err) {
+                        console.log("ERROR GENERANDO TOKEN:", err);
+                        return res.status(500).json(
+                            "Error al generar el token"
+                        );
+                    }
+
+                    const Link =
+                        `https://frontend-fl916qej6-luisa-app.vercel.app/ReestablecerPassword/${Token}`;
+
+                    try {
+
+                        await transporter.sendMail({
+                            from: `"Soporte" <${process.env.EMAIL_USER}>`,
+                            to: correo,
+                            subject: "Reestablecer Contraseña",
+
+                            html: `
+                                <h2>Reestablecer Contraseña</h2>
+
+                                <p>
+                                    Haz click en el siguiente enlace
+                                    para reestablecer tu contraseña:
+                                </p>
+
+                                <a href="${Link}">
+                                    Reestablecer contraseña
+                                </a>
+
+                                <p>
+                                    El enlace vence en 15 minutos.
+                                </p>
+                            `
+                        });
+
+                        console.log("CORREO ENVIADO A:", correo);
+
+                        return res.status(200).json(
+                            "Correo enviado exitosamente"
+                        );
+
+                    } catch (error) {
+
+                        console.log(
+                            "ERROR AL ENVIAR CORREO:",
+                            error
+                        );
+
+                        return res.status(500).json(
+                            "Error al enviar el correo electrónico"
+                        );
+                    }
+                }
+            );
+        }
+    );
+};
 
 exports.ReestablecerPassword =(req,res)=>{
 const {contraseña,Token}=req.body;
