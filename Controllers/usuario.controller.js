@@ -3,7 +3,7 @@ const bcrypt = require ("bcrypt");
 const crypto = require ("crypto");
 const db = require ("../Conexion/conexion")
 const jwt = require ("jsonwebtoken");
-const transporter = require ("../configuracion/resend")
+const resend = require ("../configuracion/resend")
 const { put, list } = require("@vercel/blob");
 
 exports.CrearUsuario = (req, res) => {
