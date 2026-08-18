@@ -227,10 +227,16 @@ exports.RecuperarPassword = (req, res) => {
 };
 
 exports.ReestablecerPassword =(req,res)=>{
-const {contraseña,Token}=req.body;
-if (!contraseña){
-return res.status(400).json("El campo es obligatorio")
-}
+console.log("========== RESTABLECER PASSWORD ==========");
+    console.log("BODY RECIBIDO:", req.body);
+    console.log("CONTRASEÑA RECIBIDA:", req.body.contraseña);
+    console.log("TOKEN RECIBIDO:", req.body.Token);
+
+    const { contraseña, Token } = req.body;
+
+    if (!contraseña) {
+        return res.status(400).json("El campo es obligatorio");
+    }
 if (contraseña.length <6){
 return res.status(400).json("La contraseña debe de tener minimo 6 caracteres")
 }
