@@ -181,7 +181,7 @@ exports.RecuperarPassword = (req, res) => {
                     try {
 
                         const { data, error } = await resend.emails.send({
-                        from: "FacturaPro <onboarding@resend.dev>",
+                        from: "Misamooo <dkim44243@gmail.com>",
                             to: correo,
                             subject: "Reestablecer Contraseña",
 
