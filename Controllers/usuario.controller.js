@@ -181,7 +181,7 @@ exports.RecuperarPassword = (req, res) => {
                     try {
 
                         const { data, error } = await resend.emails.send({
-                        from: "Misamooo <dkim44243@gmail.com>",
+                        from: "Misamooo <onboarding@resend.dev>",
                             to: correo,
                             subject: "Reestablecer Contraseña",
 
