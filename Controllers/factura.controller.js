@@ -1,5 +1,5 @@
 const db = require("../Conexion/conexion");
-const transporter = require ("../configuracion/configuracion")
+const transporter = require ("../configuracion/resend")
 const path = require ("path")
 const fs =  require('fs');
 const PDFDocument = require('pdfkit'); 

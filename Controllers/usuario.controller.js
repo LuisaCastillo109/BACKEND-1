@@ -3,7 +3,7 @@ const bcrypt = require ("bcrypt");
 const crypto = require ("crypto");
 const db = require ("../Conexion/conexion")
 const jwt = require ("jsonwebtoken");
-const transporter = require ("../configuracion/configuracion")
+const transporter = require ("../configuracion/resend")
 const { put, list } = require("@vercel/blob");
 
 exports.CrearUsuario = (req, res) => {
@@ -180,8 +180,8 @@ exports.RecuperarPassword = (req, res) => {
 
                     try {
 
-                        await transporter.sendMail({
-                            from: `"Soporte" <${process.env.EMAIL_USER}>`,
+                        const { data, error } = await resend.emails.send({
+                        from: "FacturaPro <onboarding@resend.dev>",
                             to: correo,
                             subject: "Reestablecer Contraseña",
 
