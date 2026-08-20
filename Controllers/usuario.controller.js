@@ -176,7 +176,7 @@ exports.RecuperarPassword = (req, res) => {
                     }
 
                     const Link =
-                        `https://frontend-fl916qej6-luisa-app.vercel.app/ReestablecerPassword/${Token}`;
+                        `https://frontend-k1010i4gs-luisa-app.vercel.app//ReestablecerPassword/${Token}`;
 
                     try {
 
