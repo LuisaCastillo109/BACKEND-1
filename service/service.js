@@ -7,6 +7,7 @@ const swaggerUi = require("swagger-ui-express");
 const swaggerSpec = require("../Swagger/swagger");
 
 const PORT = process.env.PORT || 3014;
+
 const dir = path.join(__dirname, "uploads");
 
 const app = express();
@@ -17,8 +18,6 @@ app.use(cors({
     allowedHeaders: ["Content-Type", "Authorization"]
 }));
 
-app.options("*", cors());
-
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -26,7 +25,11 @@ app.use("/", router);
 app.use("/", factura);
 
 app.use("/uploads", express.static(dir));
-app.use("/pdf", express.static(path.join(__dirname, "pdf")));
+
+app.use(
+    "/pdf",
+    express.static(path.join(__dirname, "pdf"))
+);
 
 app.use(
     "/api-docs",
