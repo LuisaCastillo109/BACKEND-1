@@ -229,15 +229,15 @@ exports.RecuperarPassword = (req, res) => {
 exports.ReestablecerPassword =(req,res)=>{
 console.log("========== RESTABLECER PASSWORD ==========");
     console.log("BODY RECIBIDO:", req.body);
-    console.log("CONTRASEÑA RECIBIDA:", req.body.password);
+    console.log("CONTRASEÑA RECIBIDA:", req.body.contraseña);
     console.log("TOKEN RECIBIDO:", req.body.Token);
 
-    const { password, Token } = req.body;
+    const { contraseña, Token } = req.body;
 
-    if (!password) {
+    if (!contraseña) {
         return res.status(400).json("El campo es obligatorio");
     }
-if (password.length <6){
+if (contraseña.length <6){
 return res.status(400).json("La contraseña debe de tener minimo 6 caracteres")
 }
 db.query("SELECT * FROM usuarios WHERE reset_token=? AND reset_expira >NOW()",
@@ -251,8 +251,8 @@ if (result.length ===0){
 return res.status(400).json("Error al ingresar al token")
 }
 try{
-const hashedPassword = await bcrypt.hash(password,10)
-db.query("UPDATE usuarios SET password=?, reset_token = NULL, reset_expira=NULL WHERE id=?",
+const hashedPassword = await bcrypt.hash(contraseña,10)
+db.query("UPDATE usuarios SET contraseña=?, reset_token = NULL, reset_expira=NULL WHERE id=?",
 [hashedPassword,result[0].id],
 async(err,result)=>{
 if (err){
