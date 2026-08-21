@@ -632,15 +632,12 @@ exports.SubirPDF = async (req, res) => {
 
     try {
 
-        // Verificar que llegó el PDF
         if (!req.file) {
             return res.status(400).json("No se recibió ningún PDF");
         }
 
-        // Nombre único del archivo
         const nombreArchivo = `facturas/${id}-${Date.now()}.pdf`;
 
-        // Subir PDF a Vercel Blob
         const blob = await put(
             nombreArchivo,
             req.file.buffer,
@@ -650,24 +647,27 @@ exports.SubirPDF = async (req, res) => {
             }
         );
 
-        console.log("✅ PDF SUBIDO A VERCEL BLOB:");
+        console.log("✅ PDF SUBIDO:");
         console.log(blob.url);
 
-        // Guardar URL en MySQL
         db.query(
             "UPDATE facturas SET pdf=? WHERE id=?",
             [blob.url, id],
+
             (err, result) => {
 
                 if (err) {
+
                     console.log("❌ ERROR MYSQL:", err);
 
-                    return res.status(400).json(
-                        "El PDF se subió pero no se pudo guardar en la base de datos"
+                    return res.status(500).json(
+                        "El PDF se subió pero no se pudo guardar"
                     );
                 }
 
-                console.log("✅ URL DEL PDF GUARDADA EN MYSQL");
+                console.log(
+                    `✅ PDF DE FACTURA ${id} GUARDADO`
+                );
 
                 return res.status(200).json({
                     mensaje: "PDF subido correctamente",
