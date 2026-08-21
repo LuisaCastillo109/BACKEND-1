@@ -687,7 +687,7 @@ exports.SubirPDF = async (req, res) => {
     }
 };
 
-exports.EnviarFacturaFisica = async (req, res) => {
+exports.EnviarFacturaFisica = (req, res) => {
 
     const { id } = req.params;
 
@@ -699,26 +699,36 @@ exports.EnviarFacturaFisica = async (req, res) => {
             c.nombre,
             c.apellido
         FROM facturas f
-        INNER JOIN clientes c ON f.id_cliente = c.id
+        INNER JOIN clientes c 
+            ON f.id_cliente = c.id
         WHERE f.id = ?`,
         [id],
+
         async (err, result) => {
 
             if (err) {
+
                 console.error("❌ ERROR MYSQL:", err);
-                return res.status(500).json("Error al consultar la factura");
+
+                return res.status(500).json(
+                    "Error consultando la factura"
+                );
             }
 
             if (result.length === 0) {
+
                 return res.status(404).json(
-                    "No se encontró la factura o el cliente"
+                    "No se encontró la factura"
                 );
             }
 
             const factura = result[0];
 
-            // Verificar que la factura tenga PDF
-            if (!factura.pdf) {
+            // 🔥 AQUÍ OBTENEMOS EL PDF DE MYSQL
+            const urlPDF = factura.pdf;
+
+            if (!urlPDF) {
+
                 return res.status(404).json(
                     "Esta factura todavía no tiene un PDF"
                 );
@@ -726,64 +736,97 @@ exports.EnviarFacturaFisica = async (req, res) => {
 
             try {
 
-                console.log("📧 ENVIANDO FACTURA:");
-                console.log("Cliente:", factura.email);
-                console.log("PDF:", factura.pdf);
+                console.log("📄 PDF ENCONTRADO:");
+                console.log(urlPDF);
 
-                const response = await resend.emails.send({
+                console.log("📧 CORREO:");
+                console.log(factura.email);
 
-                    from: "Misamooo <onboarding@resend.dev>",
 
-                    to: factura.email,
+                // Descargar PDF desde Vercel Blob
+                const respuestaPDF = await axios.get(
+                    urlPDF,
+                    {
+                        responseType: "arraybuffer"
+                    }
+                );
 
-                    subject: `Factura Electrónica No. ${id}`,
+                const pdfBuffer = Buffer.from(
+                    respuestaPDF.data
+                );
 
-                    html: `
-                        <h2>Factura Electrónica</h2>
 
-                        <p>
-                            Hola <strong>
-                            ${factura.nombre} ${factura.apellido}
-                            </strong>.
-                        </p>
+                // Enviar correo
+                const { data, error } =
+                    await resend.emails.send({
 
-                        <p>
-                            Adjuntamos tu factura electrónica
-                            correspondiente a la compra realizada.
-                        </p>
+                        from: "Misamooo <onboarding@resend.dev>",
 
-                        <p>
-                            Gracias por tu compra.
-                        </p>
-                    `,
+                        to: factura.email,
 
-                    attachments: [
-                        {
-                            filename: `factura_${id}.pdf`,
-                            path: factura.pdf
-                        }
-                    ]
+                        subject:
+                            `Factura Electrónica No. ${factura.id}`,
 
-                });
+                        html: `
+                            <h2>Factura Electrónica</h2>
+
+                            <p>
+                                Hola ${factura.nombre}
+                                ${factura.apellido}.
+                            </p>
+
+                            <p>
+                                Adjuntamos tu factura
+                                correspondiente a tu compra.
+                            </p>
+
+                            <p>
+                                Gracias por tu compra.
+                            </p>
+                        `,
+
+                        attachments: [
+                            {
+                                filename:
+                                    `Factura-${factura.id}.pdf`,
+
+                                content: pdfBuffer
+                            }
+                        ]
+                    });
+
+
+                if (error) {
+
+                    console.error(
+                        "❌ ERROR RESEND:",
+                        error
+                    );
+
+                    return res.status(500).json(
+                        "Error al enviar el correo"
+                    );
+                }
+
 
                 console.log(
-                    "✅ FACTURA ENVIADA:",
-                    response
+                    `✅ FACTURA ${factura.id} ENVIADA A ${factura.email}`
                 );
 
                 return res.status(200).json(
                     "Correo enviado con éxito"
                 );
 
+
             } catch (error) {
 
                 console.error(
-                    "❌ ERROR AL ENVIAR FACTURA:",
+                    "❌ ERROR ENVIANDO PDF:",
                     error
                 );
 
                 return res.status(500).json(
-                    "Error al enviar el correo electrónico"
+                    "Error al enviar la factura"
                 );
             }
         }
