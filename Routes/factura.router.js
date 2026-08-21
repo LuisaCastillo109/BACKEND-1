@@ -64,6 +64,9 @@ const PDF = multer({
 
 
 factura.post("/crearFactura",FacturaController.CrearFactura);
+factura.get("/prueba-factura", (req, res) => {
+    res.json("ROUTER FACTURA FUNCIONANDO");
+});
 factura.post("/EnviarFacturaFisica/:id",FacturaController.EnviarFacturaFisica);
 factura.post("/CrearProducto", upload.single("imagen"),FacturaController.CrearProducto);
 factura.get("/ObtenerFacturas/:id",FacturaController.ObtenerFacturas);
