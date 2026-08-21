@@ -687,43 +687,105 @@ exports.SubirPDF = async (req, res) => {
     }
 };
 
-exports.EnviarFacturaFisica = (req, res) => {
-const { id } = req.params;
-db.query(`SELECT f.id, c.email, c.nombre, c.apellido FROM facturas f 
-INNER JOIN clientes c ON f.id_cliente = c.id WHERE f.id = ?`,
-[id],
-async (err, result) => {
-if (err || result.length === 0) {
-return res.status(404).json("No se encontró la factura o el cliente");
-}
-const cliente = result[0];
-const nombreArchivo = `factura_${id}.pdf`;
-const rutaFisicaPDF = path.join(__dirname, "..", "service", "pdf", nombreArchivo);
-/* Validacion de que exista el archivo en la carpeta*/
-if (!fs.existsSync(rutaFisicaPDF)) {
-console.error(`El archivo ${nombreArchivo} no existe en la carpeta.`);
-return res.status(404).json(`El archivo físico ${nombreArchivo} no se encuentra en la carpeta PDF todavía.`);
-}
-try {
-      await transporter.sendMail({
-        from: '"Misamooo" <dkim44243@gmail.com>',
-        to: cliente.email,
-        subject: `Factura Electrónica No. ${id}`,
-        html: `<p>Hola ${cliente.nombre} ${cliente.apellido}, adjuntamos tu factura original. ¡Gracias por tu compra!</p>`,
-        attachments: [
-          {
-            filename: nombreArchivo,
-            path: rutaFisicaPDF,
-          },
-        ],
-      });
+exports.EnviarFacturaFisica = async (req, res) => {
 
-      console.log(`Factura ${id} enviada correctamente por correo.`);
-      return res.status(200).json("Correo enviado con éxito");
+    const { id } = req.params;
 
-    } catch (correoErr) {
-      console.error("Error en Nodemailer:", correoErr);
-      return res.status(500).json("Error al despachar el correo electrónico");
-    }
-  });
+    db.query(
+        `SELECT 
+            f.id,
+            f.pdf,
+            c.email,
+            c.nombre,
+            c.apellido
+        FROM facturas f
+        INNER JOIN clientes c ON f.id_cliente = c.id
+        WHERE f.id = ?`,
+        [id],
+        async (err, result) => {
+
+            if (err) {
+                console.error("❌ ERROR MYSQL:", err);
+                return res.status(500).json("Error al consultar la factura");
+            }
+
+            if (result.length === 0) {
+                return res.status(404).json(
+                    "No se encontró la factura o el cliente"
+                );
+            }
+
+            const factura = result[0];
+
+            // Verificar que la factura tenga PDF
+            if (!factura.pdf) {
+                return res.status(404).json(
+                    "Esta factura todavía no tiene un PDF"
+                );
+            }
+
+            try {
+
+                console.log("📧 ENVIANDO FACTURA:");
+                console.log("Cliente:", factura.email);
+                console.log("PDF:", factura.pdf);
+
+                const response = await resend.emails.send({
+
+                    from: "Misamooo <onboarding@resend.dev>",
+
+                    to: factura.email,
+
+                    subject: `Factura Electrónica No. ${id}`,
+
+                    html: `
+                        <h2>Factura Electrónica</h2>
+
+                        <p>
+                            Hola <strong>
+                            ${factura.nombre} ${factura.apellido}
+                            </strong>.
+                        </p>
+
+                        <p>
+                            Adjuntamos tu factura electrónica
+                            correspondiente a la compra realizada.
+                        </p>
+
+                        <p>
+                            Gracias por tu compra.
+                        </p>
+                    `,
+
+                    attachments: [
+                        {
+                            filename: `factura_${id}.pdf`,
+                            path: factura.pdf
+                        }
+                    ]
+
+                });
+
+                console.log(
+                    "✅ FACTURA ENVIADA:",
+                    response
+                );
+
+                return res.status(200).json(
+                    "Correo enviado con éxito"
+                );
+
+            } catch (error) {
+
+                console.error(
+                    "❌ ERROR AL ENVIAR FACTURA:",
+                    error
+                );
+
+                return res.status(500).json(
+                    "Error al enviar el correo electrónico"
+                );
+            }
+        }
+    );
 };
