@@ -1,9 +1,7 @@
 const db = require("../Conexion/conexion");
 const resend = require ("../configuracion/resend")
-const path = require ("path")
-const fs =  require('fs');
-const PDFDocument = require('pdfkit'); 
 const { put, list } = require("@vercel/blob");
+const axios = require("axios");
 
 exports.CrearFactura = (req, res) => {
   const {
@@ -14,10 +12,7 @@ exports.CrearFactura = (req, res) => {
     total,
     metodo_pago,
     id_cliente,
-    pdf
   } = req.body;
-
-  // 🔴 VALIDACIONES COMPLETAS
   if (
     !usuario_id ||
     !items ||
@@ -27,7 +22,7 @@ exports.CrearFactura = (req, res) => {
   ) {
     return res.status(400).json({
       mensaje: "Datos incompletos",
-      datos: req.body // 🔥 para depurar
+      datos: req.body
     });
   }
 
@@ -35,7 +30,7 @@ exports.CrearFactura = (req, res) => {
 
   // 🔥 INSERT FACTURA
   db.query(
-    "INSERT INTO facturas (usuario_id, subtotal, iva, total, metodo_pago, estado, id_cliente, pdf) VALUES (?,?,?,?,?,?,?,?)",
+    "INSERT INTO facturas (usuario_id, subtotal, iva, total, metodo_pago, estado, id_cliente) VALUES (?,?,?,?,?,?,?)",
     [
       usuario_id,
       subtotal,
@@ -44,7 +39,6 @@ exports.CrearFactura = (req, res) => {
       metodo_pago,
       "PENDIENTE",
       id_cliente,
-      pdf || null
     ],
     (err, result) => {
       if (err) {
