@@ -630,9 +630,13 @@ exports.SubirPDF = async (req, res) => {
 
     const { id } = req.params;
 
+    console.log("📩 ID RECIBIDO:", id);
+    console.log("📄 ARCHIVO RECIBIDO:", req.file);
+
     try {
 
         if (!req.file) {
+            console.log("❌ NO LLEGÓ EL PDF");
             return res.status(400).json("No se recibió ningún PDF");
         }
 
@@ -647,8 +651,8 @@ exports.SubirPDF = async (req, res) => {
             }
         );
 
-        console.log("✅ PDF SUBIDO:");
-        console.log(blob.url);
+        console.log("✅ PDF SUBIDO A BLOB");
+        console.log("🔗 URL:", blob.url);
 
         db.query(
             "UPDATE facturas SET pdf=? WHERE id=?",
@@ -657,7 +661,6 @@ exports.SubirPDF = async (req, res) => {
             (err, result) => {
 
                 if (err) {
-
                     console.log("❌ ERROR MYSQL:", err);
 
                     return res.status(500).json(
@@ -665,9 +668,8 @@ exports.SubirPDF = async (req, res) => {
                     );
                 }
 
-                console.log(
-                    `✅ PDF DE FACTURA ${id} GUARDADO`
-                );
+                console.log("✅ UPDATE MYSQL EJECUTADO");
+                console.log("📊 FILAS MODIFICADAS:", result.affectedRows);
 
                 return res.status(200).json({
                     mensaje: "PDF subido correctamente",
