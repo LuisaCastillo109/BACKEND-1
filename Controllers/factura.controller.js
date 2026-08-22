@@ -626,18 +626,18 @@ exports.VentasPorProducto = (req, res) => {
   });
 };
 
-exports.SubirPDF = async (req, res) => {
+// =====================================================
+// SUBIR PDF
+// =====================================================
 
+exports.SubirPDF = async (req, res) => {
     const { id } = req.params;
 
-    console.log("📩 ID RECIBIDO:", id);
-    console.log("📄 ARCHIVO RECIBIDO:", req.file);
-
     try {
-
         if (!req.file) {
-            console.log("❌ NO LLEGÓ EL PDF");
-            return res.status(400).json("No se recibió ningún PDF");
+            return res.status(400).json({
+                mensaje: "No se recibió ningún PDF"
+            });
         }
 
         const nombreArchivo = `facturas/${id}-${Date.now()}.pdf`;
@@ -657,19 +657,23 @@ exports.SubirPDF = async (req, res) => {
         db.query(
             "UPDATE facturas SET pdf=? WHERE id=?",
             [blob.url, id],
-
             (err, result) => {
 
                 if (err) {
-                    console.log("❌ ERROR MYSQL:", err);
+                    console.error("❌ ERROR MYSQL:", err);
 
-                    return res.status(500).json(
-                        "El PDF se subió pero no se pudo guardar"
-                    );
+                    return res.status(500).json({
+                        mensaje: "El PDF se subió pero no se pudo guardar"
+                    });
                 }
 
-                console.log("✅ UPDATE MYSQL EJECUTADO");
-                console.log("📊 FILAS MODIFICADAS:", result.affectedRows);
+                if (result.affectedRows === 0) {
+                    return res.status(404).json({
+                        mensaje: "No existe la factura"
+                    });
+                }
+
+                console.log(`✅ PDF GUARDADO EN FACTURA ${id}`);
 
                 return res.status(200).json({
                     mensaje: "PDF subido correctamente",
@@ -678,172 +682,127 @@ exports.SubirPDF = async (req, res) => {
             }
         );
 
-    } catch (err) {
+    } catch (error) {
 
-        console.log("❌ ERROR AL SUBIR PDF:", err);
+        console.error("❌ ERROR AL SUBIR PDF:", error);
 
         return res.status(500).json({
             mensaje: "Error al subir el PDF",
-            error: err.message
+            error: error.message
         });
     }
 };
 
 
-exports.EnviarFacturaFisica = (req, res) => {
+// =====================================================
+// ENVIAR FACTURA POR CORREO
+// =====================================================
+
+exports.EnviarFacturaFisica = async (req, res) => {
 
     const { id } = req.params;
 
-    console.log("📩 SOLICITUD PARA ENVIAR FACTURA:", id);
+    console.log("📩 ENVIANDO FACTURA:", id);
 
-    db.query(
-        `SELECT 
-            f.id,
-            f.pdf,
-            c.email,
-            c.nombre,
-            c.apellido
-        FROM facturas f
-        INNER JOIN clientes c 
-            ON f.id_cliente = c.id
-        WHERE f.id = ?`,
-        [id],
+    try {
 
-        async (err, result) => {
+        const [result] = await db.promise().query(
+            `SELECT 
+                f.id,
+                f.pdf,
+                c.email,
+                c.nombre,
+                c.apellido
+             FROM facturas f
+             INNER JOIN clientes c ON f.id_cliente = c.id
+             WHERE f.id = ?`,
+            [id]
+        );
 
-            if (err) {
-
-                console.error("❌ ERROR MYSQL:", err);
-
-                return res.status(500).json({
-                    mensaje: "Error consultando la factura",
-                    error: err.message
-                });
-            }
-
-            console.log("📋 RESULTADO MYSQL:", result);
-
-            if (result.length === 0) {
-
-                console.log(
-                    "❌ NO EXISTE LA FACTURA:",
-                    id
-                );
-
-                return res.status(404).json({
-                    mensaje: "No se encontró la factura"
-                });
-            }
-
-            const factura = result[0];
-
-            console.log("🧾 FACTURA:", factura);
-            console.log("📄 PDF:", factura.pdf);
-            console.log("📧 CORREO:", factura.email);
-
-            if (!factura.pdf) {
-
-                console.log(
-                    "❌ ESTA FACTURA NO TIENE PDF"
-                );
-
-                return res.status(404).json({
-                    mensaje: "Esta factura todavía no tiene un PDF"
-                });
-            }
-
-            try {
-
-                console.log(
-                    "⬇️ DESCARGANDO PDF..."
-                );
-
-                const respuestaPDF = await axios.get(
-                    factura.pdf,
-                    {
-                        responseType: "arraybuffer"
-                    }
-                );
-
-                const pdfBuffer = Buffer.from(
-                    respuestaPDF.data
-                );
-
-                console.log(
-                    "✅ PDF DESCARGADO"
-                );
-
-                const { data, error } =
-                    await resend.emails.send({
-
-                        from: "Misamooo <onboarding@resend.dev>",
-
-                        to: factura.email,
-
-                        subject:
-                            `Factura Electrónica No. ${factura.id}`,
-
-                        html: `
-                            <h2>Factura Electrónica</h2>
-
-                            <p>
-                                Hola ${factura.nombre}
-                                ${factura.apellido}.
-                            </p>
-
-                            <p>
-                                Adjuntamos tu factura.
-                            </p>
-
-                            <p>
-                                Gracias por tu compra.
-                            </p>
-                        `,
-
-                        attachments: [
-                            {
-                                filename:
-                                    `Factura-${factura.id}.pdf`,
-
-                                content: pdfBuffer
-                            }
-                        ]
-                    });
-
-                if (error) {
-
-                    console.error(
-                        "❌ ERROR RESEND:",
-                        error
-                    );
-
-                    return res.status(500).json({
-                        mensaje: "Error enviando el correo",
-                        error
-                    });
-                }
-
-                console.log(
-                    "✅ CORREO ENVIADO A:",
-                    factura.email
-                );
-
-                return res.status(200).json({
-                    mensaje: "Correo enviado con éxito"
-                });
-
-            } catch (error) {
-
-                console.error(
-                    "❌ ERROR ENVIANDO FACTURA:",
-                    error
-                );
-
-                return res.status(500).json({
-                    mensaje: "Error al enviar la factura",
-                    error: error.message
-                });
-            }
+        if (result.length === 0) {
+            return res.status(404).json({
+                mensaje: "No se encontró la factura o el cliente"
+            });
         }
-    );
+
+        const factura = result[0];
+
+        console.log("📄 PDF:", factura.pdf);
+        console.log("📧 CORREO:", factura.email);
+
+        if (!factura.pdf) {
+            return res.status(404).json({
+                mensaje: "Esta factura todavía no tiene un PDF"
+            });
+        }
+
+        // Descargar PDF desde Vercel Blob
+        const respuestaPDF = await axios.get(
+            factura.pdf,
+            {
+                responseType: "arraybuffer"
+            }
+        );
+
+        const pdfBuffer = Buffer.from(respuestaPDF.data);
+
+        console.log("✅ PDF DESCARGADO");
+
+        // Enviar correo
+        const { data, error } = await resend.emails.send({
+
+            from: "Misamooo <onboarding@resend.dev>",
+
+            to: factura.email,
+
+            subject: `Factura Electrónica No. ${factura.id}`,
+
+            html: `
+                <h2>Factura Electrónica</h2>
+
+                <p>
+                    Hola ${factura.nombre} ${factura.apellido}.
+                </p>
+
+                <p>
+                    Adjuntamos tu factura de compra.
+                </p>
+
+                <p>
+                    Gracias por tu compra.
+                </p>
+            `,
+
+            attachments: [
+                {
+                    filename: `Factura-${factura.id}.pdf`,
+                    content: pdfBuffer
+                }
+            ]
+        });
+
+        if (error) {
+            console.error("❌ ERROR RESEND:", error);
+
+            return res.status(500).json({
+                mensaje: "Error enviando el correo",
+                error: error.message || error
+            });
+        }
+
+        console.log("✅ CORREO ENVIADO A:", factura.email);
+
+        return res.status(200).json({
+            mensaje: "Correo enviado con éxito"
+        });
+
+    } catch (error) {
+
+        console.error("❌ ERROR ENVIANDO FACTURA:", error);
+
+        return res.status(500).json({
+            mensaje: "Error al enviar la factura",
+            error: error.message
+        });
+    }
 };

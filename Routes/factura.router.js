@@ -1,20 +1,18 @@
-const cors = require ("cors");
-const express = require ("express");
-const bodyParser = require ("body-parser");
-const FacturaController = require("../Controllers/factura.controller")
+const express = require("express");
+const FacturaController = require("../Controllers/factura.controller");
 const factura = express.Router();
 const multer = require("multer");
-const path = require("path");
 
-const app = express();
-app.use (cors());
-app.use (bodyParser.json());
+
+// =====================================================
+// MULTER PARA IMÁGENES
+// =====================================================
 
 const upload = multer({
     storage: multer.memoryStorage(),
 
     limits: {
-        fileSize: 5 * 1024 * 1024 // 5 MB máximo
+        fileSize: 5 * 1024 * 1024
     },
 
     fileFilter: (req, file, cb) => {
@@ -29,10 +27,7 @@ const upload = multer({
         if (tiposPermitidos.includes(file.mimetype)) {
             cb(null, true);
         } else {
-            cb(
-                new Error("Solo se permiten imágenes JPG, JPEG, PNG o WEBP"),
-                false
-            );
+            cb(new Error("Solo se permiten imágenes JPG, JPEG, PNG o WEBP"), false);
         }
     }
 });
@@ -46,7 +41,7 @@ const PDF = multer({
     storage: multer.memoryStorage(),
 
     limits: {
-        fileSize: 10 * 1024 * 1024 // 10 MB máximo
+        fileSize: 10 * 1024 * 1024
     },
 
     fileFilter: (req, file, cb) => {
@@ -54,40 +49,138 @@ const PDF = multer({
         if (file.mimetype === "application/pdf") {
             cb(null, true);
         } else {
-            cb(
-                new Error("Solo se permiten archivos PDF"),
-                false
-            );
+            cb(new Error("Solo se permiten archivos PDF"), false);
         }
     }
 });
 
 
-factura.post("/crearFactura",FacturaController.CrearFactura);
-factura.get("/prueba-factura", (req, res) => {
-    res.json("ROUTER FACTURA FUNCIONANDO");
-});
-factura.post("/EnviarFacturaFisica/:id",FacturaController.EnviarFacturaFisica);
-factura.post("/CrearProducto", upload.single("imagen"),FacturaController.CrearProducto);
-factura.get("/ObtenerFacturas/:id",FacturaController.ObtenerFacturas);
-factura.get("/ConsultarFactura/:id",FacturaController.ConsultarFactura);
-factura.get("/ObtenerClientesConFacturas/:usuario_id",FacturaController.ObtenerClientesConFacturas);
-factura.get("/ObtenerFacturaCompleta/:id",FacturaController.ObtenerFacturaCompleta);
-factura.get("/ObtenerClientes/:id",FacturaController.ObtenerClientes);
-factura.get("/VentasMensuales/:id",FacturaController.VentasMensuales);
-factura.get("/DetalleFactura",FacturaController.DetalleFactura);
-factura.get("/VentasPorProducto/:id",FacturaController.VentasPorProducto);
-factura.put("/PagarFactura/:id",FacturaController.PagarFactura);
-factura.put("/SubirPDF/:id", PDF.single("pdf"),FacturaController.SubirPDF);
-factura.put("/ActualizarProducto/:id", upload.single("imagen"), FacturaController.ActualizarProducto);
-factura.put("/subirFotoProducto",FacturaController.subirFotoProducto);
-factura.delete("/EliminarFactura/:id",FacturaController.EliminarFactura);
-factura.delete("/EliminarProducto/:id",FacturaController.EliminarProducto);
-factura.get("/ObtenerProductos/:id",FacturaController.ObtenerProductos);
-factura.get("/ObtenerDashboard/:id",FacturaController.ObtenerDashboard);
+// =====================================================
+// FACTURAS
+// =====================================================
+
+factura.post(
+    "/crearFactura",
+    FacturaController.CrearFactura
+);
+
+factura.post(
+    "/EnviarFacturaFisica/:id",
+    FacturaController.EnviarFacturaFisica
+);
+
+factura.get(
+    "/ObtenerFacturas/:id",
+    FacturaController.ObtenerFacturas
+);
+
+factura.get(
+    "/ConsultarFactura/:id",
+    FacturaController.ConsultarFactura
+);
+
+factura.get(
+    "/ObtenerFacturaCompleta/:id",
+    FacturaController.ObtenerFacturaCompleta
+);
+
+
+// =====================================================
+// CLIENTES
+// =====================================================
+
+factura.get(
+    "/ObtenerClientes/:id",
+    FacturaController.ObtenerClientes
+);
+
+factura.get(
+    "/ObtenerClientesConFacturas/:usuario_id",
+    FacturaController.ObtenerClientesConFacturas
+);
+
+
+// =====================================================
+// PRODUCTOS
+// =====================================================
+
+factura.post(
+    "/CrearProducto",
+    upload.single("imagen"),
+    FacturaController.CrearProducto
+);
+
+factura.get(
+    "/ObtenerProductos/:id",
+    FacturaController.ObtenerProductos
+);
+
+factura.put(
+    "/ActualizarProducto/:id",
+    upload.single("imagen"),
+    FacturaController.ActualizarProducto
+);
+
+factura.put(
+    "/subirFotoProducto",
+    FacturaController.subirFotoProducto
+);
+
+factura.delete(
+    "/EliminarProducto/:id",
+    FacturaController.EliminarProducto
+);
+
+
+// =====================================================
+// PDF
+// =====================================================
+
+factura.put(
+    "/SubirPDF/:id",
+    PDF.single("pdf"),
+    FacturaController.SubirPDF
+);
+
+
+// =====================================================
+// PAGOS Y REPORTES
+// =====================================================
+
+factura.put(
+    "/PagarFactura/:id",
+    FacturaController.PagarFactura
+);
+
+factura.get(
+    "/VentasMensuales/:id",
+    FacturaController.VentasMensuales
+);
+
+factura.get(
+    "/VentasPorProducto/:id",
+    FacturaController.VentasPorProducto
+);
+
+factura.get(
+    "/DetalleFactura",
+    FacturaController.DetalleFactura
+);
+
+factura.get(
+    "/ObtenerDashboard/:id",
+    FacturaController.ObtenerDashboard
+);
+
+
+// =====================================================
+// ELIMINAR FACTURA
+// =====================================================
+
+factura.delete(
+    "/EliminarFactura/:id",
+    FacturaController.EliminarFactura
+);
+
 
 module.exports = factura;
-
-
-
-
