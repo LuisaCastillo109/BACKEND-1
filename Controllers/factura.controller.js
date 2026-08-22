@@ -651,7 +651,7 @@ exports.SubirPDF = async (req, res) => {
             }
         );
 
-        console.log("✅ PDF SUBIDO A BLOB");
+        console.log("✅ PDF SUBIDO A VERCEL BLOB");
         console.log("🔗 URL:", blob.url);
 
         db.query(
