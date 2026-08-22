@@ -79,6 +79,11 @@ router.put(
     UsuarioControllers.ActualizarUsuarios
 );
 
+// ============================================
+// ACTUALIZAR CLIENTES
+// ============================================
+
+router.put("/ActualizarClientes/:id",UsuarioControllers.ActualizarClientes);
 
 // ============================================
 // SUBIR FOTO

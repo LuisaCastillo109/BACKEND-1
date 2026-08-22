@@ -320,6 +320,19 @@ console.log("Usuario no actualizado")
 }};
 
 
+exports.ActualizarClientes =(req,res)=>{
+const {id}=req.params;
+const {nombre,apellido,documento,email,direccion,genero,telefono,tipo_documento}=req.body
+db.query("UPDATE clientes SET nombre=?,apellido=?,documento=?,email=?,direccion=?,genero=?,telefono=?,tipo_documento=? WHERE id=?",
+[nombre,apellido,documento,email,direccion,genero,telefono,tipo_documento,id],
+(err,result)=>{
+if (err){
+console.log(err)
+return res.status(400).json("Cliente no actualizado")
+}
+res.send(result)
+})};
+
 exports.EliminarUsuarios =(req,res)=>{
 const {id}=req.params;
 db.query("DELETE FROM usuarios WHERE id=?",
